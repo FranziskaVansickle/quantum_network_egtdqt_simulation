@@ -5,30 +5,42 @@ Created on Fri May  9 11:05:02 2025
 @author: VANTROPY
 """
 
+# scripts/draw_egtdqt_circuit.py
 import os
 from qiskit import QuantumCircuit
+from qiskit.visualization import circuit_drawer
 import matplotlib.pyplot as plt
 
-# Build circuit as before…
+# 1) Build the EGT/DQT circuit
 qc = QuantumCircuit(3, 3)
-qc.h(0); qc.cx(0, 2); qc.barrier()
-qc.cx(1, 0); qc.h(1); qc.barrier()
-qc.cx(0, 2); qc.cz(1, 2); qc.barrier()
-qc.measure([0,1,2],[0,1,2])
+# Bell pair (q0 ↔ q2)
+qc.h(0)
+qc.cx(0, 2)
+qc.barrier()
 
-# Draw
-fig = qc.draw(output='mpl', fold=100)
+# Ancilla‐assisted teleport (q1 → q2 via q0)
+qc.cx(1, 0)
+qc.h(1)
+qc.barrier()
+qc.cx(0, 2)
+qc.cz(1, 2)
+qc.barrier()
+
+# Measurement
+qc.measure([0, 1, 2], [0, 1, 2])
+
+# 2) Draw using the explicit drawer
+fig = circuit_drawer(qc, output='mpl', style={'dpi':100})
 fig.set_size_inches(8, 4)
-plt.tight_layout()
+fig.tight_layout()
 
-# Compute absolute path to docs folder
+# 3) Save to docs/
 script_dir = os.path.dirname(os.path.abspath(__file__))
-repo_root = os.path.abspath(os.path.join(script_dir, ".."))
-docs_dir = os.path.join(repo_root, "docs")
+repo_root  = os.path.abspath(os.path.join(script_dir, ".."))
+docs_dir   = os.path.join(repo_root, "docs")
 os.makedirs(docs_dir, exist_ok=True)
 
-# Save into docs/
 out_path = os.path.join(docs_dir, "egtdqt_circuit_diagram.png")
-plt.savefig(out_path, dpi=100)
-plt.show()
+fig.savefig(out_path, dpi=100)
+print(f"Saved circuit diagram to {out_path}")
 
